@@ -17,7 +17,8 @@ import (
 )
 
 var consumerWG = new(sync.WaitGroup)
-var publisherWG = new(sync.WaitGroup)
+
+// var publisherWG = new(sync.WaitGroup)
 
 var anomalyNotification = anomalynotification.NewAnomalyNotification()
 
@@ -32,12 +33,13 @@ var f mqtt.MessageHandler = func(client mqtt.Client, msg mqtt.Message) {
 
 func main() {
 
-	c, err := mqttBroker.Start(f)
+	// c,err := mqttBroker.Start(f)
+	_, err := mqttBroker.Start(f)
 	if err != nil {
 		panic(err)
 	}
 
-	mqttBroker.PublishTestData(c, publisherWG)
+	// mqttBroker.PublishTestData(c, publisherWG)
 	timeToWait := 6 * time.Second
 	startTime := time.Now()
 	time.Sleep(timeToWait)
