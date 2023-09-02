@@ -7,6 +7,7 @@ import (
 	"time"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
+	"github.com/google/uuid"
 )
 
 type MQTTBrokerPublisherInterface interface {
@@ -26,8 +27,11 @@ type MQTTBroker struct {
 }
 
 func NewMQTTBroker(mp MQTTBrokerPublisherInterface, mc MQTTBrokerConsumerInterface) *MQTTBroker {
+	cliendIdValue := uuid.New()
+	cliendIdString := cliendIdValue.String()
+
 	brokerHost := getEnv("BROKER_HOST", "tcp://localhost:1883")
-	brokerClientId := getEnv("BROKER_CLIENT_ID", "emqx_test_client")
+	brokerClientId := getEnv("BROKER_CLIENT_ID", cliendIdString)
 	brokerTopic := getEnv("BROKER_TOPIC", "testtopic/#")
 
 	fmt.Printf("Broker host: %s ~ Broker client id: %s ~ Broker topic: %s\n", brokerHost, brokerClientId, brokerTopic)
@@ -75,6 +79,8 @@ func (b *MQTTBroker) createMQTTClientOptions(f mqtt.MessageHandler) *mqtt.Client
 	// Set the message callback handler
 	opts.SetDefaultPublishHandler(f)
 	opts.SetPingTimeout(1 * time.Second)
+	opts.WillQos = 1
+
 	return opts
 }
 
