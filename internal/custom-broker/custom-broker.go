@@ -1,17 +1,13 @@
 package custombroker
 
 import (
-	"log"
+	"fmt"
 	"os"
 	"sync"
 	"time"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 )
-
-const BrokerHost = "tcp://127.0.01:1883"
-const BrokerClientId = "emqx_test_client"
-const BrokerTopic = "testtopic/#"
 
 type MQTTBrokerPublisherInterface interface {
 	Publish(c mqtt.Client, wg *sync.WaitGroup)
@@ -22,15 +18,35 @@ type MQTTBrokerConsumerInterface interface {
 }
 
 type MQTTBroker struct {
-	mqttPublisher MQTTBrokerPublisherInterface
-	mqttConsumer  MQTTBrokerConsumerInterface
+	mqttPublisher  MQTTBrokerPublisherInterface
+	mqttConsumer   MQTTBrokerConsumerInterface
+	brokerHost     string
+	brokerClientId string
+	brokerTopic    string
 }
 
 func NewMQTTBroker(mp MQTTBrokerPublisherInterface, mc MQTTBrokerConsumerInterface) *MQTTBroker {
+	brokerHost := getEnv("BROKER_HOST", "tcp://localhost:1883")
+	brokerClientId := getEnv("BROKER_CLIENT_ID", "emqx_test_client")
+	brokerTopic := getEnv("BROKER_TOPIC", "testtopic/#")
+
+	fmt.Printf("Broker host: %s ~ Broker client id: %s ~ Broker topic: %s\n", brokerHost, brokerClientId, brokerTopic)
+
 	return &MQTTBroker{
-		mqttPublisher: mp,
-		mqttConsumer:  mc,
+		mqttPublisher:  mp,
+		mqttConsumer:   mc,
+		brokerHost:     brokerHost,
+		brokerClientId: brokerClientId,
+		brokerTopic:    brokerTopic,
 	}
+}
+
+func getEnv(key string, defaultValue string) string {
+	value, exists := os.LookupEnv(key)
+	if !exists {
+		return defaultValue
+	}
+	return value
 }
 
 func (b *MQTTBroker) Start(f mqtt.MessageHandler) (mqtt.Client, error) {
@@ -51,9 +67,9 @@ func (b *MQTTBroker) Start(f mqtt.MessageHandler) (mqtt.Client, error) {
 }
 
 func (b *MQTTBroker) createMQTTClientOptions(f mqtt.MessageHandler) *mqtt.ClientOptions {
-	mqtt.DEBUG = log.New(os.Stdout, "", 0)
-	mqtt.ERROR = log.New(os.Stdout, "", 0)
-	opts := mqtt.NewClientOptions().AddBroker(BrokerHost).SetClientID(BrokerClientId)
+	// mqtt.DEBUG = log.New(os.Stdout, "", 0)
+	// mqtt.ERROR = log.New(os.Stdout, "", 0)
+	opts := mqtt.NewClientOptions().AddBroker(b.brokerHost).SetClientID(b.brokerClientId)
 
 	opts.SetKeepAlive(60 * time.Second)
 	// Set the message callback handler
@@ -69,7 +85,7 @@ func (b *MQTTBroker) connectToTopic(c mqtt.Client) error {
 	return nil
 }
 func (b *MQTTBroker) subscribeToTopic(c mqtt.Client) error {
-	if token := c.Subscribe(BrokerTopic, 0, nil); token.Wait() && token.Error() != nil {
+	if token := c.Subscribe(b.brokerTopic, 0, nil); token.Wait() && token.Error() != nil {
 		return token.Error()
 	}
 	return nil

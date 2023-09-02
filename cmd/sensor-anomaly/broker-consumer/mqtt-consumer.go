@@ -35,7 +35,7 @@ func (c *MQTTConsumer) Consume(client mqtt.Client, msg mqtt.Message, wg *sync.Wa
 	anomalyDetected := len(*anomalousData) > 0
 
 	if anomalyDetected {
-		c.anomalyNotification.Notify(sensorData.VehicleId, sensorData.Latitude, sensorData.Longitude, anomalousData)
+		go c.anomalyNotification.Notify(sensorData.VehicleId, sensorData.Latitude, sensorData.Longitude, anomalousData)
 	}
 
 	wg.Done()
