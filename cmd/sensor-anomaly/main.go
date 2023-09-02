@@ -33,21 +33,17 @@ var f mqtt.MessageHandler = func(client mqtt.Client, msg mqtt.Message) {
 
 func main() {
 
-	// c,err := mqttBroker.Start(f)
+	// c, err := mqttBroker.Start(f)
 	_, err := mqttBroker.Start(f)
 	if err != nil {
 		panic(err)
 	}
 
 	// mqttBroker.PublishTestData(c, publisherWG)
-	timeToWait := 6 * time.Second
-	startTime := time.Now()
-	time.Sleep(timeToWait)
-	consumerWG.Wait()
-	endTime := time.Now()
-	totalConsumptionTime := endTime.Sub(startTime)
-	fmt.Printf("Total consumption time: %v\n", totalConsumptionTime-timeToWait)
+	// publisherWG.Wait()
 
+	timeToWait := 1 * time.Second
+	time.Sleep(timeToWait)
 	waitForExitSignal()
 }
 
