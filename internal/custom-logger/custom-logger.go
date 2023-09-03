@@ -4,7 +4,6 @@ import (
 	"flag"
 	"log"
 	"os"
-	"path/filepath"
 )
 
 var (
@@ -12,11 +11,8 @@ var (
 )
 
 func init() {
-	// set location of log file
-	var logpath, err = filepath.Abs("./assets/anomalies.log")
-	if err != nil {
-		panic(err)
-	}
+
+	var logpath = "./assets/anomalies.log"
 
 	flag.Parse()
 	var file, err1 = os.Create(logpath)

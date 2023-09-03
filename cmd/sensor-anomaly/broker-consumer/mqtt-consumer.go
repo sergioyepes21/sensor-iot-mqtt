@@ -10,6 +10,7 @@ import (
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	anomalynotification "github.com/sergioyepes21/sensor-iot-mqtt/cmd/sensor-anomaly/anomaly-notification"
+	logger "github.com/sergioyepes21/sensor-iot-mqtt/internal/custom-logger"
 )
 
 func bytesToFloat64(bytes []byte) float64 {
@@ -44,7 +45,8 @@ func (c *MQTTConsumer) Consume(client mqtt.Client, msg mqtt.Message, wg *sync.Wa
 		go c.anomalyNotification.Notify(sensorData.VehicleId, sensorData.Latitude, sensorData.Longitude, anomalousData, startTime)
 	} else {
 		endTime := time.Now()
-		fmt.Printf("Message processed in %s\n", endTime.Sub(startTime))
+		duration := endTime.Sub(startTime)
+		logger.Log.Printf("No anomalies ~ [Duration: %v] ~ [Vehicle: %s]\n", duration, sensorData.VehicleId)
 	}
 
 	wg.Done()
