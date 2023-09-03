@@ -43,3 +43,7 @@ func (rc *MyRedisClient) GetAll() ([]string, error) {
 func (rc *MyRedisClient) GetHashValues(key string) ([]string, error) {
 	return rc.HVals(context.Background(), key).Result()
 }
+
+func (rc *MyRedisClient) CloseConn() error {
+	return rc.Close()
+}

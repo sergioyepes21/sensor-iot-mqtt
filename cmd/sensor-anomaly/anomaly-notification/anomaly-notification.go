@@ -1,7 +1,6 @@
 package anomalynotification
 
 import (
-	"fmt"
 	"time"
 
 	logger "github.com/sergioyepes21/sensor-iot-mqtt/internal/custom-logger"
@@ -9,23 +8,22 @@ import (
 )
 
 type AnomalyNotification struct {
-	redisClient *redisclient.MyRedisClient
 }
 
 func NewAnomalyNotification() *AnomalyNotification {
-	redisClient := redisclient.NewMyRedisClient()
 
-	return &AnomalyNotification{
-		redisClient: redisClient,
-	}
+	return &AnomalyNotification{}
 }
 
 func (a *AnomalyNotification) Notify(vehicleId string, lat float64, long float64, anomalousData *[]string, startTime time.Time) {
-	values, err := a.redisClient.GetHashValues(vehicleId)
-	if err != nil {
-		fmt.Printf("Error getting key %s: %v\n", vehicleId, err)
+	redisClient := redisclient.NewMyRedisClient()
+	values, err := redisClient.GetHashValues(vehicleId)
+	errClose := redisClient.Close()
+	if err != nil || errClose != nil {
+		logger.Log.Printf("Error getting key %s: ~ GetHV E: %v ~ CloseConn: %v\n", vehicleId, err, errClose)
 		return
 	}
+	redisClient.Close()
 
 	endTime := time.Now()
 	duration := endTime.Sub(startTime)
