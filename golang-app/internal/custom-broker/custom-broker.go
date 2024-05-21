@@ -30,7 +30,7 @@ func NewMQTTBroker(mp MQTTBrokerPublisherInterface, mc MQTTBrokerConsumerInterfa
 	cliendIdValue := uuid.New()
 	cliendIdString := cliendIdValue.String()
 
-	brokerHost := getEnv("BROKER_HOST", "tcp://localhost:1883")
+	brokerHost := getEnv("BROKER_HOST", "tcp://mqtt5:1883")
 	brokerClientId := getEnv("BROKER_CLIENT_ID", cliendIdString)
 	brokerTopic := getEnv("BROKER_TOPIC", "testtopic/#")
 
@@ -73,7 +73,7 @@ func (b *MQTTBroker) Start(f mqtt.MessageHandler) (mqtt.Client, error) {
 func (b *MQTTBroker) createMQTTClientOptions(f mqtt.MessageHandler) *mqtt.ClientOptions {
 	// mqtt.DEBUG = log.New(os.Stdout, "", 0)
 	// mqtt.ERROR = log.New(os.Stdout, "", 0)
-	opts := mqtt.NewClientOptions().AddBroker(b.brokerHost).SetClientID(b.brokerClientId)
+	opts := mqtt.NewClientOptions().AddBroker(b.brokerHost).SetClientID(b.brokerClientId).SetUsername("user1").SetPassword("user1")
 
 	opts.SetKeepAlive(60 * time.Second)
 	// Set the message callback handler
@@ -90,6 +90,7 @@ func (b *MQTTBroker) connectToTopic(c mqtt.Client) error {
 	}
 	return nil
 }
+
 func (b *MQTTBroker) subscribeToTopic(c mqtt.Client) error {
 	if token := c.Subscribe(b.brokerTopic, 0, nil); token.Wait() && token.Error() != nil {
 		return token.Error()

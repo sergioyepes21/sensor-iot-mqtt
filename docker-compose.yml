@@ -1,0 +1,121 @@
+version: "3.7"
+services:
+  mqtt5:
+    image: eclipse-mosquitto
+    container_name: mqtt5
+    ports:
+      - "1883:1883"
+      - "9001:9001"
+    volumes:
+      - ./mqtt5/config:/mosquitto/config:rw
+      - ./mqtt5/data:/mosquitto/data:rw
+      - ./mqtt5/log:/mosquitto/log:rw
+    restart: unless-stopped
+    networks:
+      - services-net
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:v0.49.1
+    container_name: cadvisor
+    privileged: true
+    # platform: linux/aarch64 # m1/m2 mac
+    devices:
+      - /dev/kmsg:/dev/kmsg
+    ports:
+      - 8080:8080
+    volumes:
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /etc/machine-id:/etc/machine-id:ro
+      - /var/lib/dbus/machine-id:/var/lib/dbus/machine-id:ro
+    networks:
+      - monitor-net
+    depends_on:
+      - redis
+
+  prometheus:
+    image: prom/prometheus:v2.52.0
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+    volumes:
+      - ./prometheus:/etc/prometheus
+      - prom_data:/prometheus
+    restart: unless-stopped
+    networks:
+      - monitor-net
+    depends_on:
+      - cadvisor
+      - mosquitto-exporter
+      # - node-exporter
+
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    ports:
+      - 3000:3000
+    restart: unless-stopped
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=grafana
+    networks:
+      - monitor-net
+    volumes:
+      - ./grafana:/etc/grafana/provisioning/datasources
+
+  redis:
+    image: redis:latest
+    container_name: redis
+    ports:
+      - 6379:6379
+    networks:
+      - services-net
+
+  mosquitto-exporter:
+    image: sapcc/mosquitto-exporter
+    environment:
+      - "BROKER_ENDPOINT=tcp://mqtt5:1883"
+      - "MQTT_USER=user1"
+      - "MQTT_PASS=user1"
+    restart: unless-stopped
+    networks:
+      - services-net
+
+  golang-app:
+    container_name: golang-app
+    build:
+      context: ./golang-app
+      dockerfile: ./cmd/sensor-anomaly/Dockerfile
+    environment:
+      - REDIS_HOST=redis:6379
+    networks:
+      - services-net
+    depends_on:
+      - redis
+      - mqtt5
+
+  # node-exporter:
+  #   image: prom/node-exporter
+  #   container_name: node-exporter
+  #   command:
+  #     - "--web.listen-address=:9101"
+  #   networks:
+  #     - monitor-net
+  #   ports:
+  #     - 9101:9101
+
+# volumes for mapping data,config and log
+volumes:
+  config:
+  data:
+  log:
+  prom_data:
+
+networks:
+  monitor-net:
+    driver: bridge
+  services-net:
+    driver: bridge

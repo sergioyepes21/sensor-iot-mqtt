@@ -14,9 +14,9 @@ type MyRedisClient struct {
 
 func NewMyRedisClient() *MyRedisClient {
 	client := redis.NewClient(&redis.Options{
-		Addr:     os.Getenv("REDIS_HOST"),
-		Password: os.Getenv("REDIS_PASSWORD"),
-		DB:       0,
+		Addr: os.Getenv("REDIS_HOST"),
+		// Password: os.Getenv("REDIS_PASSWORD"),
+		DB: 0,
 	})
 
 	// Ping the Redis server to check the connection

@@ -32,15 +32,10 @@ var f mqtt.MessageHandler = func(client mqtt.Client, msg mqtt.Message) {
 }
 
 func main() {
-
-	// c, err := mqttBroker.Start(f)
 	_, err := mqttBroker.Start(f)
 	if err != nil {
 		panic(err)
 	}
-
-	// mqttBroker.PublishTestData(c, publisherWG)
-	// publisherWG.Wait()
 
 	timeToWait := 1 * time.Second
 	time.Sleep(timeToWait)
