@@ -1,7 +1,6 @@
 package brokerconsumer
 
 import (
-	"encoding/binary"
 	"fmt"
 	"strconv"
 	"strings"
@@ -12,11 +11,6 @@ import (
 	anomalynotification "github.com/sergioyepes21/sensor-iot-mqtt/cmd/sensor-anomaly/anomaly-notification"
 	logger "github.com/sergioyepes21/sensor-iot-mqtt/internal/custom-logger"
 )
-
-func bytesToFloat64(bytes []byte) float64 {
-	bits := binary.LittleEndian.Uint64(bytes)
-	return float64(bits)
-}
 
 type MQTTConsumer struct {
 	anomalyNotification *anomalynotification.AnomalyNotification
@@ -38,15 +32,14 @@ func (c *MQTTConsumer) Consume(client mqtt.Client, msg mqtt.Message, wg *sync.Wa
 		return
 	}
 
-	anomalousData := c.getAnomalousSensors(*sensorData)
-	anomalyDetected := len(*anomalousData) > 0
+	anomalyDetected := c.getAnomalousSensors(*sensorData)
 
 	if anomalyDetected {
-		go c.anomalyNotification.Notify(sensorData.VehicleId, sensorData.Latitude, sensorData.Longitude, anomalousData, startTime)
+		go c.anomalyNotification.Notify(sensorData.VehicleId, sensorData.Latitude, sensorData.Longitude, startTime)
 	} else {
 		endTime := time.Now()
 		duration := endTime.Sub(startTime)
-		logger.Log.Printf("No anomalies ~ [Duration: %v] ~ [Vehicle: %s]\n", duration, sensorData.VehicleId)
+		logger.Log.Printf("No anomalies on [Vehicle: %s], [Duration: %v]\n", sensorData.VehicleId, duration.Microseconds())
 	}
 
 	wg.Done()
@@ -106,12 +99,11 @@ func getLongitudeFromBrokerMessage(messageArr []string) (float64, error) {
 	return latitude, nil
 }
 
-func (c *MQTTConsumer) getAnomalousSensors(sensorData SensorData) *[]string {
-	anomalyOnSensor := new([]string)
-	for sensorKey, sensorValue := range sensorData.SensoredValues {
+func (c *MQTTConsumer) getAnomalousSensors(sensorData SensorData) bool {
+	for _, sensorValue := range sensorData.SensoredValues {
 		if sensorValue {
-			*anomalyOnSensor = append(*anomalyOnSensor, sensorKey)
+			return true
 		}
 	}
-	return anomalyOnSensor
+	return false
 }

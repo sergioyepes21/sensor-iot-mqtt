@@ -11,8 +11,6 @@ services:
       - ./mqtt5/data:/mosquitto/data:rw
       - ./mqtt5/log:/mosquitto/log:rw
     restart: unless-stopped
-    networks:
-      - services-net
 
   cadvisor:
     image: gcr.io/cadvisor/cadvisor:v0.49.1
@@ -28,9 +26,6 @@ services:
       - /sys:/sys:ro
       - /var/lib/docker/:/var/lib/docker:ro
       - /etc/machine-id:/etc/machine-id:ro
-      - /var/lib/dbus/machine-id:/var/lib/dbus/machine-id:ro
-    networks:
-      - monitor-net
     depends_on:
       - redis
 
@@ -45,12 +40,9 @@ services:
       - ./prometheus:/etc/prometheus
       - prom_data:/prometheus
     restart: unless-stopped
-    networks:
-      - monitor-net
     depends_on:
       - cadvisor
       - mosquitto-exporter
-      # - node-exporter
 
   grafana:
     image: grafana/grafana
@@ -61,18 +53,15 @@ services:
     environment:
       - GF_SECURITY_ADMIN_USER=admin
       - GF_SECURITY_ADMIN_PASSWORD=grafana
-    networks:
-      - monitor-net
     volumes:
-      - ./grafana:/etc/grafana/provisioning/datasources
+      - grafana_data:/var/lib/grafana
+      - ./grafana/datasources:/etc/grafana/provisioning/datasources
 
   redis:
     image: redis:latest
     container_name: redis
     ports:
       - 6379:6379
-    networks:
-      - services-net
 
   mosquitto-exporter:
     image: sapcc/mosquitto-exporter
@@ -81,31 +70,44 @@ services:
       - "MQTT_USER=user1"
       - "MQTT_PASS=user1"
     restart: unless-stopped
-    networks:
-      - services-net
 
   golang-app:
     container_name: golang-app
     build:
       context: ./golang-app
       dockerfile: ./cmd/sensor-anomaly/Dockerfile
+    volumes:
+      - logs_data:/usr/src/app/assets/
     environment:
       - REDIS_HOST=redis:6379
-    networks:
-      - services-net
+    depends_on:
+      - redis
+      - mqtt5
+  
+  nodejs-app:
+    container_name: nodejs-app
+    build:
+      context: ./nodejs-app
+      dockerfile: ./Dockerfile
+    env_file:
+      - ./nodejs-app/.prod.env
+    volumes:
+      - logs_data:/app/dist/assets/
     depends_on:
       - redis
       - mqtt5
 
-  # node-exporter:
-  #   image: prom/node-exporter
-  #   container_name: node-exporter
-  #   command:
-  #     - "--web.listen-address=:9101"
-  #   networks:
-  #     - monitor-net
-  #   ports:
-  #     - 9101:9101
+  fluentd:
+    image: fluentd:v1.17.0-debian-1.0
+    container_name: fluentd
+    build:
+      context: ./fluentd
+    ports:
+    - 24224:24224
+    - 8000:8000
+    volumes:
+    - logs_data:/fluentd/logs:ro
+    - ./fluentd/fluentd.conf:/fluentd/etc/fluent.conf:ro
 
 # volumes for mapping data,config and log
 volumes:
@@ -113,9 +115,11 @@ volumes:
   data:
   log:
   prom_data:
+  grafana_data: {}
+  logs_data:
 
-networks:
-  monitor-net:
-    driver: bridge
-  services-net:
-    driver: bridge
+# networks:
+#   monitor-net:
+#     driver: bridge
+#   services-net:
+#     driver: bridge

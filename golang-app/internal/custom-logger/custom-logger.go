@@ -12,7 +12,7 @@ var (
 
 func init() {
 
-	var logpath = "./assets/anomalies.log"
+	var logpath = "./assets/go-anomalies.log"
 
 	flag.Parse()
 	var file, err1 = os.Create(logpath)
@@ -21,5 +21,4 @@ func init() {
 		panic(err1)
 	}
 	Log = log.New(file, "", log.LstdFlags|log.Lmsgprefix)
-	Log.Println("LogFile : " + logpath)
 }

@@ -26,13 +26,13 @@ var mqttPublisher = brokerpublisher.NewMQTTPublisher()
 var mqttConsumer = brokerconsumer.NewMQTTConsumer(anomalyNotification)
 var mqttBroker = custombroker.NewMQTTBroker(mqttPublisher, mqttConsumer)
 
-var f mqtt.MessageHandler = func(client mqtt.Client, msg mqtt.Message) {
+var messageHandler mqtt.MessageHandler = func(client mqtt.Client, msg mqtt.Message) {
 	consumerWG.Add(1)
 	go mqttConsumer.Consume(client, msg, consumerWG)
 }
 
 func main() {
-	_, err := mqttBroker.Start(f)
+	_, err := mqttBroker.Start(messageHandler)
 	if err != nil {
 		panic(err)
 	}
