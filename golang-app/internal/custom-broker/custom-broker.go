@@ -30,11 +30,12 @@ func NewMQTTBroker(mp MQTTBrokerPublisherInterface, mc MQTTBrokerConsumerInterfa
 	cliendIdValue := uuid.New()
 	cliendIdString := cliendIdValue.String()
 
+	// brokerHost := getEnv("BROKER_HOST", "tcp://localhost:1883")
 	brokerHost := getEnv("BROKER_HOST", "tcp://mqtt5:1883")
 	brokerClientId := getEnv("BROKER_CLIENT_ID", cliendIdString)
 	brokerTopic := getEnv("BROKER_TOPIC", "testtopic/#")
 
-	fmt.Printf("Broker host: %s ~ Broker client id: %s ~ Broker topic: %s\n", brokerHost, brokerClientId, brokerTopic)
+	fmt.Printf("Broker host: %s ~ Broker client id: %s ~ Broker topic: %s", brokerHost, brokerClientId, brokerTopic)
 
 	return &MQTTBroker{
 		mqttPublisher:  mp,

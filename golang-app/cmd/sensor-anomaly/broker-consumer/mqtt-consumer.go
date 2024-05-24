@@ -39,7 +39,7 @@ func (c *MQTTConsumer) Consume(client mqtt.Client, msg mqtt.Message, wg *sync.Wa
 	} else {
 		endTime := time.Now()
 		duration := endTime.Sub(startTime)
-		logger.Log.Printf("No anomalies on [Vehicle: %s], [Duration: %v]\n", sensorData.VehicleId, duration.Microseconds())
+		logger.Log.Printf("No anomalies on [Vehicle: %s], [Duration: %v]", sensorData.VehicleId, duration.Microseconds())
 	}
 
 	wg.Done()

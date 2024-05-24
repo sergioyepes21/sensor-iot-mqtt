@@ -20,5 +20,6 @@ func init() {
 	if err1 != nil {
 		panic(err1)
 	}
-	Log = log.New(file, "", log.LstdFlags|log.Lmsgprefix)
+
+	Log = log.New(file, "", log.LstdFlags)
 }
