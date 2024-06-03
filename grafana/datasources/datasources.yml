@@ -7,18 +7,3 @@ datasources:
     isDefault: true
     access: proxy
     editable: true 
-    
-  # - name: InfluxDB
-  #   type: influxdb
-  #   access: proxy
-  #   orgId: 1
-  #   url: http://influxdb:8086
-  #   password: "admin"
-  #   user: "admin"
-  #   database: "influx"
-  #   basicAuth: false
-  #   isDefault: false
-  #   jsonData:
-  #     timeInterval: "5s"
-  #   version: 1
-  #   editable: false

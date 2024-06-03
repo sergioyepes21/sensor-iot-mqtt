@@ -21,5 +21,5 @@ func init() {
 		panic(err1)
 	}
 
-	Log = log.New(file, "", log.LstdFlags)
+	Log = log.New(file, "[Go] ", log.LstdFlags)
 }

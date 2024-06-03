@@ -13,7 +13,7 @@ export class WinstonLoggerService implements ILoggerService {
       levels: winston.config.npm.levels,
       format: winston.format.combine(
         winston.format.timestamp({ format: "YYYY/MM/DD HH:mm:ss" }),
-        winston.format.printf(log => `${log.timestamp} ${log.message}`),
+        winston.format.printf(log => `[Node] ${log.timestamp} ${log.message}`),
       ),
       transports: [
         new winston.transports.File({

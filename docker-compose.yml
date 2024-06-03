@@ -16,7 +16,6 @@ services:
     image: gcr.io/cadvisor/cadvisor:v0.49.1
     container_name: cadvisor
     privileged: true
-    # platform: linux/aarch64 # m1/m2 mac
     devices:
       - /dev/kmsg:/dev/kmsg
     ports:
@@ -42,7 +41,7 @@ services:
     restart: unless-stopped
     depends_on:
       - cadvisor
-      - mosquitto-exporter
+      # - mosquitto-exporter
 
   grafana:
     image: grafana/grafana
@@ -63,13 +62,13 @@ services:
     ports:
       - 6379:6379
 
-  mosquitto-exporter:
-    image: sapcc/mosquitto-exporter
-    environment:
-      - "BROKER_ENDPOINT=tcp://mqtt5:1883"
-      - "MQTT_USER=user1"
-      - "MQTT_PASS=user1"
-    restart: unless-stopped
+  # mosquitto-exporter:
+  #   image: sapcc/mosquitto-exporter
+  #   environment:
+  #     - "BROKER_ENDPOINT=tcp://mqtt5:1883"
+  #     - "MQTT_USER=user1"
+  #     - "MQTT_PASS=user1"
+  #   restart: unless-stopped
 
   golang-app:
     container_name: golang-app
@@ -80,6 +79,9 @@ services:
       - logs_data:/usr/src/app/assets/
     environment:
       - REDIS_HOST=redis:6379
+      - BROKER_HOST=tcp://mqtt5:1883
+      - BROKER_USER=user1
+      - BROKER_PASS=user1
     depends_on:
       - redis
       - mqtt5
@@ -117,9 +119,3 @@ volumes:
   prom_data:
   grafana_data: {}
   logs_data:
-
-# networks:
-#   monitor-net:
-#     driver: bridge
-#   services-net:
-#     driver: bridge

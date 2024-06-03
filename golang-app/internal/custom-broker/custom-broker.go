@@ -8,6 +8,7 @@ import (
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/google/uuid"
+	redisclient "github.com/sergioyepes21/sensor-iot-mqtt/internal/redis-client"
 )
 
 type MQTTBrokerPublisherInterface interface {
@@ -15,7 +16,7 @@ type MQTTBrokerPublisherInterface interface {
 }
 
 type MQTTBrokerConsumerInterface interface {
-	Consume(client mqtt.Client, msg mqtt.Message, wg *sync.WaitGroup)
+	Consume(client mqtt.Client, msg mqtt.Message, redisClient *redisclient.MyRedisClient, wg *sync.WaitGroup)
 }
 
 type MQTTBroker struct {
@@ -30,8 +31,8 @@ func NewMQTTBroker(mp MQTTBrokerPublisherInterface, mc MQTTBrokerConsumerInterfa
 	cliendIdValue := uuid.New()
 	cliendIdString := cliendIdValue.String()
 
-	// brokerHost := getEnv("BROKER_HOST", "tcp://localhost:1883")
-	brokerHost := getEnv("BROKER_HOST", "tcp://mqtt5:1883")
+	brokerHost := getEnv("BROKER_HOST", "tcp://localhost:1883")
+	// brokerHost := getEnv("BROKER_HOST", "tcp://mqtt5:1883")
 	brokerClientId := getEnv("BROKER_CLIENT_ID", cliendIdString)
 	brokerTopic := getEnv("BROKER_TOPIC", "testtopic/#")
 

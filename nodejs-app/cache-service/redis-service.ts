@@ -24,6 +24,6 @@ export class RedisService implements ICacheService {
   }
 
   async close(): Promise<void> {
-    await this.redisClient.disconnect();
+    this.redisClient.disconnect();
   }
 }

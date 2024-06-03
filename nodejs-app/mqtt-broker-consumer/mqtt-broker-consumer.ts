@@ -88,7 +88,7 @@ export class MQTTBrokerConsumer implements IMQTTBrokerConsumer {
 
       const phoneNumbers = hashValues.join(" ");
 
-      message = `Anomaly detected on [Vehicle: ${sensorData.vehicleId}], [Duration: $duration], [Phone numbers: ${phoneNumbers}], [Latitude: ${sensorData.latitude}], [Longitude: ${sensorData.longitude}]`;
+      message = `Anomaly detected on [Vehicle: ${sensorData.vehicleId}], [Duration: $duration], [Phone numbers: [${phoneNumbers}]]`;
     } catch (err) {
       console.error(`Error getting key: ${sensorData.vehicleId}`, err);
     } finally {

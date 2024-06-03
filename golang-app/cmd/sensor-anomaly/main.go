@@ -11,6 +11,7 @@ import (
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	brokerpublisher "github.com/sergioyepes21/sensor-iot-mqtt/internal/broker-publisher"
 	custombroker "github.com/sergioyepes21/sensor-iot-mqtt/internal/custom-broker"
+	redisclient "github.com/sergioyepes21/sensor-iot-mqtt/internal/redis-client"
 
 	anomalynotification "github.com/sergioyepes21/sensor-iot-mqtt/cmd/sensor-anomaly/anomaly-notification"
 	brokerconsumer "github.com/sergioyepes21/sensor-iot-mqtt/cmd/sensor-anomaly/broker-consumer"
@@ -25,10 +26,11 @@ var anomalyNotification = anomalynotification.NewAnomalyNotification()
 var mqttPublisher = brokerpublisher.NewMQTTPublisher()
 var mqttConsumer = brokerconsumer.NewMQTTConsumer(anomalyNotification)
 var mqttBroker = custombroker.NewMQTTBroker(mqttPublisher, mqttConsumer)
+var redisClient = redisclient.NewMyRedisClient()
 
 var messageHandler mqtt.MessageHandler = func(client mqtt.Client, msg mqtt.Message) {
 	consumerWG.Add(1)
-	go mqttConsumer.Consume(client, msg, consumerWG)
+	go mqttConsumer.Consume(client, msg, redisClient, consumerWG)
 }
 
 func main() {

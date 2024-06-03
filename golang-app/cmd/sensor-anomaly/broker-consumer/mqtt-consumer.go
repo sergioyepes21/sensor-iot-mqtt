@@ -10,6 +10,7 @@ import (
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	anomalynotification "github.com/sergioyepes21/sensor-iot-mqtt/cmd/sensor-anomaly/anomaly-notification"
 	logger "github.com/sergioyepes21/sensor-iot-mqtt/internal/custom-logger"
+	redisclient "github.com/sergioyepes21/sensor-iot-mqtt/internal/redis-client"
 )
 
 type MQTTConsumer struct {
@@ -22,7 +23,7 @@ func NewMQTTConsumer(a *anomalynotification.AnomalyNotification) *MQTTConsumer {
 	}
 }
 
-func (c *MQTTConsumer) Consume(client mqtt.Client, msg mqtt.Message, wg *sync.WaitGroup) {
+func (c *MQTTConsumer) Consume(client mqtt.Client, msg mqtt.Message, redisClient *redisclient.MyRedisClient, wg *sync.WaitGroup) {
 
 	startTime := time.Now()
 
@@ -35,7 +36,7 @@ func (c *MQTTConsumer) Consume(client mqtt.Client, msg mqtt.Message, wg *sync.Wa
 	anomalyDetected := c.getAnomalousSensors(*sensorData)
 
 	if anomalyDetected {
-		go c.anomalyNotification.Notify(sensorData.VehicleId, sensorData.Latitude, sensorData.Longitude, startTime)
+		go c.anomalyNotification.Notify(redisClient, sensorData.VehicleId, sensorData.Latitude, sensorData.Longitude, startTime)
 	} else {
 		endTime := time.Now()
 		duration := endTime.Sub(startTime)

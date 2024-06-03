@@ -14,8 +14,10 @@ type MyRedisClient struct {
 
 func NewMyRedisClient() *MyRedisClient {
 	client := redis.NewClient(&redis.Options{
-		Addr: os.Getenv("REDIS_HOST"),
-		DB:   0,
+		Addr:               os.Getenv("REDIS_HOST"),
+		DB:                 0,
+		IdleTimeout:        5 * time.Second,
+		IdleCheckFrequency: 1 * time.Second,
 	})
 
 	// Ping the Redis server to check the connection
@@ -43,6 +45,6 @@ func (rc *MyRedisClient) GetHashValues(key string) ([]string, error) {
 	return rc.HVals(context.Background(), key).Result()
 }
 
-func (rc *MyRedisClient) CloseConn() error {
-	return rc.Close()
-}
+// func (rc *MyRedisClient) CloseConn() error {
+// 	return rc.CloseConn()
+// }

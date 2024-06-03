@@ -13,9 +13,9 @@ scrape_configs:
     static_configs:
       - targets: ["cadvisor:8080"]
 
-  - job_name: mqtt
-    static_configs:
-      - targets: ["mosquitto-exporter:9234"]
+  # - job_name: mqtt
+  #   static_configs:
+  #     - targets: ["mosquitto-exporter:9234"]
 
   - job_name: fluentd
     scrape_interval: 5s
