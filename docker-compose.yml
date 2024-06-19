@@ -1,0 +1,121 @@
+version: "3.7"
+services:
+  mqtt5:
+    image: eclipse-mosquitto
+    container_name: mqtt5
+    ports:
+      - "1883:1883"
+      - "9001:9001"
+    volumes:
+      - ./mqtt5/config:/mosquitto/config:rw
+      - ./mqtt5/data:/mosquitto/data:rw
+      - ./mqtt5/log:/mosquitto/log:rw
+    restart: unless-stopped
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:v0.49.1
+    container_name: cadvisor
+    privileged: true
+    devices:
+      - /dev/kmsg:/dev/kmsg
+    ports:
+      - 8080:8080
+    volumes:
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /etc/machine-id:/etc/machine-id:ro
+    depends_on:
+      - redis
+
+  prometheus:
+    image: prom/prometheus:v2.52.0
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+    volumes:
+      - ./prometheus:/etc/prometheus
+      - prom_data:/prometheus
+    restart: unless-stopped
+    depends_on:
+      - cadvisor
+      # - mosquitto-exporter
+
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    ports:
+      - 3000:3000
+    restart: unless-stopped
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=grafana
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/datasources:/etc/grafana/provisioning/datasources
+
+  redis:
+    image: redis:latest
+    container_name: redis
+    ports:
+      - 6379:6379
+
+  # mosquitto-exporter:
+  #   image: sapcc/mosquitto-exporter
+  #   environment:
+  #     - "BROKER_ENDPOINT=tcp://mqtt5:1883"
+  #     - "MQTT_USER=user1"
+  #     - "MQTT_PASS=user1"
+  #   restart: unless-stopped
+
+  golang-app:
+    container_name: golang-app
+    build:
+      context: ./golang-app
+      dockerfile: ./cmd/sensor-anomaly/Dockerfile
+    volumes:
+      - logs_data:/usr/src/app/assets/
+    environment:
+      - REDIS_HOST=redis:6379
+      - BROKER_HOST=tcp://mqtt5:1883
+      - BROKER_USER=user1
+      - BROKER_PASS=user1
+    depends_on:
+      - redis
+      - mqtt5
+  
+  nodejs-app:
+    container_name: nodejs-app
+    build:
+      context: ./nodejs-app
+      dockerfile: ./Dockerfile
+    env_file:
+      - ./nodejs-app/.prod.env
+    volumes:
+      - logs_data:/app/dist/assets/
+    depends_on:
+      - redis
+      - mqtt5
+
+  fluentd:
+    image: fluentd:v1.17.0-debian-1.0
+    container_name: fluentd
+    build:
+      context: ./fluentd
+    ports:
+    - 24224:24224
+    - 8000:8000
+    volumes:
+    - logs_data:/fluentd/logs:ro
+    - ./fluentd/fluentd.conf:/fluentd/etc/fluent.conf:ro
+
+# volumes for mapping data,config and log
+volumes:
+  config:
+  data:
+  log:
+  prom_data:
+  grafana_data: {}
+  logs_data:
